@@ -5,25 +5,19 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # pylint: disable = missing-docstring
-import re
-import time
 
 import lml
 
-# need this, since the console goes through network
 class _test(lml.simple_base):
         
     def eval(self, ic, target):
 
-        lml.ui_sw_sync(ic, target)
+        # lml.simple_base.start_00() has uploaded code to the mega,
+        # uploaded the UI code to the raspberry PI and started the UI
+        # on raspberry's console ssh1, so ssh0 is available for normal
+        # commands.
 
-        # Start OVVE UI
-        target.shell.run("export DISPLAY=:0")
-        target.shell.run("pkill -f -9 ovve_ui.py || true")
-        target.shell.run("python3 software-ui.git/ovve_ui/ovve_ui.py >& ovve_ui.log &")
-
-        lml.controller_sw_sync(ic, target, "software-controller.git/software-controller.ino")
-
+        # UI is freshly started
         r = self.expect(
             target.capture.image_on_screenshot('canary-resp-rate.png'),
             target.capture.image_on_screenshot('canary-TV-Exp.png'),
