@@ -46,6 +46,23 @@ def ui_sw_sync(ic, target):
         "rsync -e 'ssh -p %s' -a software-ui.git root@%s:/home/pi"
         % (port, hostname))
 
+def controller_sw_sync(ic, target, path = "software-controller/software-controller.ino"):
+    tcfl.app_sketch.app_sketch.configure(
+        self, target, ( os.path.abspath(path), ))
+    target.shcmd_local(
+        "arduino-cli"
+        " compile"
+        #" --build-path software-controller.git/"
+        #" --build-cache-path software-controller.git/"
+        " --fqbn %(sketch_fqbn)s"
+        " software-controller.git/software-controller.ino")
+    target.images.flash(
+        {
+            "kernel-arm":
+            "software-controller.git/software-controller.ino.arduino.avr.mega.hex"
+        },
+        upload = True)
+
 # need this, since the console goes through network
 @tcfl.tc.interconnect("ipv4_addr")
 @tcfl.tc.target("pos_capable")
@@ -56,10 +73,3 @@ class simple_base(tcfl.tc.tc_c):
     def start_00(self, ic, target):
         ic.power.on()
         target.shell.prompt = re.compile("TCF-%(tc_hash)s:.*\$ " % target.kws)
-
-        # Deploy the software tree to the RPI
-        port = target.tunnel.add(22)
-        hostname = target.rtb.parsed_url.hostname
-        self.shcmd_local(
-            "rsync -e 'ssh -p %s' -a software-ui.git root@%s:/home/pi"
-            % (port, hostname))
