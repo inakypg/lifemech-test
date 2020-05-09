@@ -51,7 +51,8 @@ def ui_sw_sync(ic, target, path):
         "rsync -e 'ssh -p %s' -a %s root@%s:/home/pi"
         % (port, path, hostname))
 
-def controller_sw_sync(ic, target, path = "software-controller/software-controller.ino"):
+def controller_sw_sync(target, path = "software-controller/software-controller.ino"):
+    target.report_info("CONTROLLER: building")
     tcfl.app_sketch.app_sketch.configure(
         target.testcase, target, ( os.path.abspath(path), ))
     target.shcmd_local(
@@ -59,6 +60,7 @@ def controller_sw_sync(ic, target, path = "software-controller/software-controll
         " compile"
         " --fqbn %%(sketch_fqbn)s"
         " %s" % path)
+    target.report_info("CONTROLLER: flashing")
     target.images.flash(
         {
             "kernel-arm":
@@ -78,7 +80,7 @@ class simple_base(tcfl.tc.tc_c):
         target.shell.prompt = re.compile("TCF-%(tc_hash)s:.*\$ " % target.kws)
         
         # Build and flash the mega
-        controller_sw_sync(ic, target, "software-controller/software-controller.ino")
+        controller_sw_sync(target, "software-controller/software-controller.ino")
 
         # Send the UI code, kill an existing one, start it again
         target.report_info("UI: uploading code")
